@@ -497,3 +497,26 @@ describe('v3 PTC event admission and relationships', () => {
     expect(() => restoreReleasedV3Artifact(artifact([turn, obsolete, settle]), new Set())).toThrow(/no unique start/)
   })
 })
+
+it('preserves released descriptor v2 payloads through V2 to V3 migration without inventing composition', () => {
+  for (const descriptor of [
+    { version: 2, mode: 'one-shot', provider: 'spawn' },
+    { version: 2, mode: 'continuable', provider: 'spawn', label: 'historical child', agentProvider: 'mock', agentModel: 'mock', persona: 'preserve', toolFilter: { allow: ['read'], deny: ['write'] } },
+  ]) {
+    const input = deepFreeze([event('subagent/descriptor', descriptor)])
+    const output = migrate(input)
+    expect(output.events[0]?.data).toEqual(descriptor)
+    expect(output.events[0]?.data).not.toHaveProperty('agentReasoningEffort')
+  }
+})
+
+it('rejects unknown and malformed historical descriptors at migration admission', () => {
+  const descriptor = { version: 2, mode: 'continuable', provider: 'spawn', label: 'child' }
+  for (const payload of [
+    { ...descriptor, version: 4 },
+    { ...descriptor, agentReasoningEffort: 'high' },
+    { ...descriptor, agentProvider: 'mock' },
+    { ...descriptor, toolFilter: { allow: [1] } },
+    { ...descriptor, unknownField: true },
+  ]) expect(() => migrate([event('subagent/descriptor', payload)])).toThrow()
+})

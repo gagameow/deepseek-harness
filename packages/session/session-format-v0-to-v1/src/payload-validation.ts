@@ -953,7 +953,10 @@ function modelRouteValue(value: SessionFormatJsonValue | undefined, label: strin
 }
 
 function subagentDescriptorValue(data: JsonRecord, label: string): void {
-  literalValue(data['version'], [3], `${label} version`)
+  literalValue(data['version'], [2, 3], `${label} version`)
+  if (data['version'] === 2 && Object.hasOwn(data, 'agentReasoningEffort')) {
+    throw new SessionFormatError(`${label} version 2 cannot declare agentReasoningEffort`)
+  }
   nonEmptyString(data['provider'], `${label} provider`)
   if (data['mode'] === 'one-shot') {
     assertReleasedV0Keys(data, ['mode', 'version', 'provider'], ['label'], `${label} data`)

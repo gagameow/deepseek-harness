@@ -207,7 +207,10 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
   if (typeof version !== 'number') {
     throw new Error('persisted subagent descriptor version must be a number')
   }
-  if (version !== SUBAGENT_DESCRIPTOR_VERSION) return undefined
+  if (version !== 2 && version !== SUBAGENT_DESCRIPTOR_VERSION) return undefined
+  if (version === 2 && Object.hasOwn(value, 'agentReasoningEffort')) {
+    throw new Error('persisted subagent descriptor version 2 cannot declare agentReasoningEffort')
+  }
 
   const mode = value['mode']
   if (mode !== 'one-shot' && mode !== 'continuable') {
@@ -306,12 +309,13 @@ export function snapshotSubagentDescriptor(input: SubagentDescriptorInput): Suba
  * Fold a persisted child log to its supported descriptor. The first
  * `subagent/descriptor` event is authoritative — the establishing provider
  * appends exactly one, so a later same-type event cannot rewrite the declared
- * composition.
+ * composition. Version 2 records normalize in memory without adding a reasoning
+ * effort or rewriting the persisted payload.
  * @param events - the loaded child session events.
  * @returns the descriptor, or `undefined` when the log has none or its
- *   version is not {@link SUBAGENT_DESCRIPTOR_VERSION} (the child cannot be
+ *   version is neither 2 nor {@link SUBAGENT_DESCRIPTOR_VERSION} (the child cannot be
  *   classified by this runtime).
- * @throws when a current-version persisted payload does not match its complete
+ * @throws when a supported persisted payload does not match its complete
  *   declared schema.
  */
 export function foldSubagentDescriptor(events: readonly SessionEvent[]): SubagentDescriptorData | undefined {
