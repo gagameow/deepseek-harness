@@ -966,7 +966,10 @@ function subagentDescriptorValue(data: JsonRecord, label: string): void {
   literalValue(data['mode'], ['continuable'], `${label} mode`)
   nonEmptyString(data['label'], `${label} label`)
   for (const key of ['agentProvider', 'agentModel', 'agentReasoningEffort', 'persona'] as const) {
-    if (data[key] !== undefined) nonEmptyString(data[key], `${label} ${key}`)
+    if (data[key] !== undefined) {
+      const validate = key === 'persona' && data['version'] === 2 ? stringValue : nonEmptyString
+      validate(data[key], `${label} ${key}`)
+    }
   }
   if ((data['agentProvider'] === undefined) !== (data['agentModel'] === undefined)) {
     throw new SessionFormatError(`${label} agentProvider and agentModel must be paired`)

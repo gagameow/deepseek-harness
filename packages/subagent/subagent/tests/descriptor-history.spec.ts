@@ -5,6 +5,11 @@ import { foldSubagentDescriptor } from '../src/descriptor.ts'
 const event = (data: unknown) => ({ type: 'subagent/descriptor', seq: 0, time: 1, data }) as SessionEvent
 
 describe('released descriptor v2 history', () => {
+  it('preserves an explicitly empty historical persona', () => {
+    const old = Object.freeze({ version: 2, mode: 'continuable', provider: 'spawn', label: 'child', persona: '' })
+    expect(foldSubagentDescriptor([event(old)])).toEqual({ ...old, version: 3 })
+    expect(old).toEqual({ version: 2, mode: 'continuable', provider: 'spawn', label: 'child', persona: '' })
+  })
   it('normalizes a detached continuable descriptor without mutating the saved record', () => {
     const old = Object.freeze({ version: 2, mode: 'continuable', provider: 'spawn', label: 'child', agentProvider: 'mock', agentModel: 'mock', toolFilter: { deny: ['write'] } })
     const restored = foldSubagentDescriptor([event(old)])

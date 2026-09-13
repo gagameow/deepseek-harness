@@ -501,6 +501,7 @@ describe('v3 PTC event admission and relationships', () => {
 it('preserves released descriptor v2 payloads through V2 to V3 migration without inventing composition', () => {
   for (const descriptor of [
     { version: 2, mode: 'one-shot', provider: 'spawn' },
+    { version: 2, mode: 'continuable', provider: 'spawn', label: 'empty persona', persona: '' },
     { version: 2, mode: 'continuable', provider: 'spawn', label: 'historical child', agentProvider: 'mock', agentModel: 'mock', persona: 'preserve', toolFilter: { allow: ['read'], deny: ['write'] } },
   ]) {
     const input = deepFreeze([event('subagent/descriptor', descriptor)])
@@ -514,6 +515,8 @@ it('rejects unknown and malformed historical descriptors at migration admission'
   const descriptor = { version: 2, mode: 'continuable', provider: 'spawn', label: 'child' }
   for (const payload of [
     { ...descriptor, version: 4 },
+    { ...descriptor, persona: false },
+    { ...descriptor, version: 3, persona: '' },
     { ...descriptor, agentReasoningEffort: 'high' },
     { ...descriptor, agentProvider: 'mock' },
     { ...descriptor, toolFilter: { allow: [1] } },
